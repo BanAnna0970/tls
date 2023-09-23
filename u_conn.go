@@ -47,19 +47,19 @@ type UConn struct {
 
 // UClient returns a new uTLS client, with behavior depending on clientHelloID.
 // Config CAN be nil, but make sure to eventually specify ServerName.
-func UClient(conn net.Conn, config *Config, clientHelloID ClientHelloID) *UConn {
-	if config == nil {
-		config = &Config{}
-	}
-	tlsConn := Conn{conn: conn, config: config, isClient: true}
-	handshakeState := PubClientHandshakeState{C: &tlsConn, Hello: &PubClientHelloMsg{}}
-	uconn := UConn{Conn: &tlsConn, ClientHelloID: clientHelloID, HandshakeState: handshakeState}
-	uconn.HandshakeState.uconn = &uconn
-	uconn.handshakeFn = uconn.clientHandshake
-	uconn.sessionController = newSessionController(&uconn)
-	uconn.utls.sessionController = uconn.sessionController
-	return &uconn
-}
+// func UClient(conn net.Conn, config *Config, clientHelloID ClientHelloID) *UConn {
+// 	if config == nil {
+// 		config = &Config{}
+// 	}
+// 	tlsConn := Conn{conn: conn, config: config, isClient: true}
+// 	handshakeState := PubClientHandshakeState{C: &tlsConn, Hello: &PubClientHelloMsg{}}
+// 	uconn := UConn{Conn: &tlsConn, ClientHelloID: clientHelloID, HandshakeState: handshakeState}
+// 	uconn.HandshakeState.uconn = &uconn
+// 	uconn.handshakeFn = uconn.clientHandshake
+// 	uconn.sessionController = newSessionController(&uconn)
+// 	uconn.utls.sessionController = uconn.sessionController
+// 	return &uconn
+// }
 
 // BuildHandshakeState behavior varies based on ClientHelloID and
 // whether it was already called before.
@@ -459,7 +459,7 @@ func (c *UConn) clientHandshake(ctx context.Context) (err error) {
 	hello := c.HandshakeState.Hello.getPrivatePtr()
 	defer func() { c.HandshakeState.Hello = hello.getPublicPtr() }()
 
-	sessionIsLocked := c.utls.sessionController.isSessionLocked()
+	sessionIsLocked := false
 
 	// after this point exactly 1 out of 2 HandshakeState pointers is non-nil,
 	// useTLS13 variable tells which pointer
@@ -852,7 +852,7 @@ func (c *Conn) utlsHandshakeMessageType(msgType byte) (handshakeMessage, error) 
 
 // Extending (*Conn).connectionStateLocked()
 func (c *Conn) utlsConnectionStateLocked(state *ConnectionState) {
-	state.PeerApplicationSettings = c.utls.peerApplicationSettings
+	// state.PeerApplicationSettings = c.utls.peerApplicationSettings
 }
 
 type utlsConnExtraFields struct {

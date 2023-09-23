@@ -96,7 +96,7 @@ type Conn struct {
 	// clientProtocol is the negotiated ALPN protocol.
 	clientProtocol string
 
-	utls utlsConnExtraFields // [UTLS] used for extensive things such as ALPS, PSK, etc
+	// utls utlsConnExtraFields // [UTLS] used for extensive things such as ALPS, PSK, etc
 
 	// input/output
 	in, out   halfConn

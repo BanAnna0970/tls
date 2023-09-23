@@ -312,12 +312,6 @@ func (c *Conn) clientHandshake(ctx context.Context) (err error) {
 
 func (c *Conn) loadSession(hello *clientHelloMsg) (
 	session *SessionState, earlySecret, binderKey []byte, err error) {
-	// [UTLS SECTION START]
-	if c.utls.sessionController != nil {
-		c.utls.sessionController.onEnterLoadSessionCheck()
-		defer c.utls.sessionController.onLoadSessionReturn()
-	}
-	// [UTLS SECTION END]
 	if c.config.SessionTicketsDisabled || c.config.ClientSessionCache == nil {
 		return nil, nil, nil, nil
 	}
@@ -373,27 +367,9 @@ func (c *Conn) loadSession(hello *clientHelloMsg) (
 			// The original connection had InsecureSkipVerify, while this doesn't.
 			return nil, nil, nil, nil
 		}
-		serverCert := session.peerCertificates[0]
-		// [UTLS SECTION START]
-		if !c.config.InsecureSkipTimeVerify {
-			if c.config.time().After(serverCert.NotAfter) {
-				// Expired certificate, delete the entry.
-				c.config.ClientSessionCache.Put(cacheKey, nil)
-				return nil, nil, nil, nil
-			}
+		if err := session.peerCertificates[0].VerifyHostname(c.config.ServerName); err != nil {
+			return nil, nil, nil, nil
 		}
-		var dnsName string
-		if len(c.config.InsecureServerNameToVerify) == 0 {
-			dnsName = c.config.ServerName
-		} else if c.config.InsecureServerNameToVerify != "*" {
-			dnsName = c.config.InsecureServerNameToVerify
-		}
-		if len(dnsName) > 0 {
-			if err := serverCert.VerifyHostname(dnsName); err != nil {
-				return nil, nil, nil, nil
-			}
-		}
-		// [UTLS SECTION END]
 	}
 
 	if session.version != VersionTLS13 {
@@ -456,11 +432,6 @@ func (c *Conn) loadSession(hello *clientHelloMsg) (
 	// Compute the PSK binders. See RFC 8446, Section 4.2.11.2.
 	earlySecret = cipherSuite.extract(session.secret, nil)
 	binderKey = cipherSuite.deriveSecret(earlySecret, resumptionBinderLabel, nil)
-	// [UTLS SECTION START]
-	if c.utls.sessionController != nil && !c.utls.sessionController.shouldLoadSessionWriteBinders() {
-		return
-	}
-	// [UTLS SECTION END]
 	transcript := cipherSuite.hash.New()
 	helloBytes, err := hello.marshalWithoutBinders()
 	if err != nil {
@@ -471,6 +442,7 @@ func (c *Conn) loadSession(hello *clientHelloMsg) (
 	if err := hello.updateBinders(pskBinders); err != nil {
 		return nil, nil, nil, err
 	}
+
 	return
 }
 

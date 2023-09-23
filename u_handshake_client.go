@@ -125,40 +125,40 @@ func (hs *clientHandshakeStateTLS13) serverFinishedReceived() error {
 }
 
 func (hs *clientHandshakeStateTLS13) sendClientEncryptedExtensions() error {
-	c := hs.c
-	clientEncryptedExtensions := new(utlsClientEncryptedExtensionsMsg)
-	if c.utls.hasApplicationSettings {
-		clientEncryptedExtensions.hasApplicationSettings = true
-		clientEncryptedExtensions.applicationSettings = c.utls.localApplicationSettings
-		if _, err := c.writeHandshakeRecord(clientEncryptedExtensions, hs.transcript); err != nil {
-			return err
-		}
-	}
+	// c := hs.c
+	// clientEncryptedExtensions := new(utlsClientEncryptedExtensionsMsg)
+	// if c.utls.hasApplicationSettings {
+	// 	clientEncryptedExtensions.hasApplicationSettings = true
+	// 	clientEncryptedExtensions.applicationSettings = c.utls.localApplicationSettings
+	// 	if _, err := c.writeHandshakeRecord(clientEncryptedExtensions, hs.transcript); err != nil {
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }
 
 func (hs *clientHandshakeStateTLS13) utlsReadServerParameters(encryptedExtensions *encryptedExtensionsMsg) error {
-	hs.c.utls.hasApplicationSettings = encryptedExtensions.utls.hasApplicationSettings
-	hs.c.utls.peerApplicationSettings = encryptedExtensions.utls.applicationSettings
+	// hs.c.utls.hasApplicationSettings = encryptedExtensions.utls.hasApplicationSettings
+	// hs.c.utls.peerApplicationSettings = encryptedExtensions.utls.applicationSettings
 
-	if hs.c.utls.hasApplicationSettings {
-		if hs.uconn.vers < VersionTLS13 {
-			return errors.New("tls: server sent application settings at invalid version")
-		}
-		if len(hs.uconn.clientProtocol) == 0 {
-			return errors.New("tls: server sent application settings without ALPN")
-		}
+	// if hs.c.utls.hasApplicationSettings {
+	// 	if hs.uconn.vers < VersionTLS13 {
+	// 		return errors.New("tls: server sent application settings at invalid version")
+	// 	}
+	// 	if len(hs.uconn.clientProtocol) == 0 {
+	// 		return errors.New("tls: server sent application settings without ALPN")
+	// 	}
 
-		// Check if the ALPN selected by the server exists in the client's list.
-		if alps, ok := hs.uconn.config.ApplicationSettings[hs.serverHello.alpnProtocol]; ok {
-			hs.c.utls.localApplicationSettings = alps
-		} else {
-			// return errors.New("tls: server selected ALPN doesn't match a client ALPS")
-			return nil // ignore if client doesn't have ALPS in use.
-			// TODO: is this a issue or not?
-		}
-	}
+	// 	// Check if the ALPN selected by the server exists in the client's list.
+	// 	if alps, ok := hs.uconn.config.ApplicationSettings[hs.serverHello.alpnProtocol]; ok {
+	// 		hs.c.utls.localApplicationSettings = alps
+	// 	} else {
+	// 		// return errors.New("tls: server selected ALPN doesn't match a client ALPS")
+	// 		return nil // ignore if client doesn't have ALPS in use.
+	// 		// TODO: is this a issue or not?
+	// 	}
+	// }
 
 	return nil
 }
